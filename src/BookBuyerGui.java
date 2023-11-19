@@ -24,6 +24,7 @@ class BookBuyerGui extends JFrame {
 		getContentPane().add(p, BorderLayout.CENTER);
 		
 		JButton addButton = new JButton("Search");
+		JButton budgetButton = new JButton("Set Budget");
 		addButton.addActionListener( new ActionListener() {
 			public void actionPerformed(ActionEvent ev) {
 				try {
@@ -38,6 +39,7 @@ class BookBuyerGui extends JFrame {
 		} );
 		p = new JPanel();
 		p.add(addButton);
+		p.add(budgetButton);
 		getContentPane().add(p, BorderLayout.SOUTH);
 		
 		addWindowListener(new	WindowAdapter() {
