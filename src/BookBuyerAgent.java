@@ -11,8 +11,7 @@ import jade.domain.FIPAAgentManagement.DFAgentDescription;
 import jade.domain.FIPAAgentManagement.ServiceDescription;
 
 public class BookBuyerAgent extends Agent {
-
-
+	private int Budget = 60;
   private BookBuyerGui myGui;
   private String targetBookTitle;
   
@@ -88,7 +87,7 @@ public class BookBuyerAgent extends Agent {
 	  private int repliesCnt = 0;
 	  private MessageTemplate mt;
 	  private int step = 0;
-	  private int Budget = 60;
+
 	
 	  public void action() {
 	    switch (step) {
@@ -132,7 +131,8 @@ public class BookBuyerAgent extends Agent {
 	    case 2:
 	      //best proposal consumption - purchase
 				if (Budget < bestPrice){
-					break;
+					targetBookTitle = "";
+					step = 4;
 				} else {
 				ACLMessage order = new ACLMessage(ACLMessage.ACCEPT_PROPOSAL);
 				order.addReceiver(bestSeller);
