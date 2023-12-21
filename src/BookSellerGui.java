@@ -34,8 +34,9 @@ class BookSellerGui extends JFrame {
 			public void actionPerformed(ActionEvent ev) {
 				try {
 					String title = titleField.getText().trim();
-					String price = priceField.getText().trim() + shipping_costField.getText().trim();
-					myAgent.updateCatalogue(title, Integer.parseInt(price));
+					String price = priceField.getText().trim();
+					String shipping = shipping_costField.getText().trim();
+					myAgent.updateCatalogue(title, Integer.parseInt(price) + Integer.parseInt(shipping));
 					titleField.setText("");
 					priceField.setText("");
 					shipping_costField.setText("");

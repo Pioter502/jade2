@@ -11,6 +11,8 @@ import jade.domain.FIPAAgentManagement.DFAgentDescription;
 import jade.domain.FIPAAgentManagement.ServiceDescription;
 
 public class BookBuyerAgent extends Agent {
+
+
   private BookBuyerGui myGui;
   private String targetBookTitle;
   
@@ -86,6 +88,7 @@ public class BookBuyerAgent extends Agent {
 	  private int repliesCnt = 0;
 	  private MessageTemplate mt;
 	  private int step = 0;
+	  private int Budget = 60;
 	
 	  public void action() {
 	    switch (step) {
@@ -113,7 +116,7 @@ public class BookBuyerAgent extends Agent {
 	          if (bestSeller == null || price < bestPrice) {
 	            //the best proposal as for now
 	            bestPrice = price;
-	            bestSeller = reply.getSender();
+				bestSeller = reply.getSender();
 	          }
 	        }
 	        repliesCnt++;
@@ -128,15 +131,18 @@ public class BookBuyerAgent extends Agent {
 	      break;
 	    case 2:
 	      //best proposal consumption - purchase
-	      ACLMessage order = new ACLMessage(ACLMessage.ACCEPT_PROPOSAL);
-          order.addReceiver(bestSeller);
-	      order.setContent(targetBookTitle);
-	      order.setConversationId("book-trade");
-	      order.setReplyWith("order"+System.currentTimeMillis());
-	      myAgent.send(order);
-	      mt = MessageTemplate.and(MessageTemplate.MatchConversationId("book-trade"),
-	                               MessageTemplate.MatchInReplyTo(order.getReplyWith()));
-	      step = 3;
+				if (Budget < bestPrice){
+					break;
+				} else {
+				ACLMessage order = new ACLMessage(ACLMessage.ACCEPT_PROPOSAL);
+				order.addReceiver(bestSeller);
+				order.setContent(targetBookTitle);
+				order.setConversationId("book-trade");
+				order.setReplyWith("order" + System.currentTimeMillis());
+				myAgent.send(order);
+				mt = MessageTemplate.and(MessageTemplate.MatchConversationId("book-trade"),
+						MessageTemplate.MatchInReplyTo(order.getReplyWith()));
+				step = 3;}
 	      break;
 	    case 3:      
 	      //seller confirms the transaction
@@ -144,8 +150,10 @@ public class BookBuyerAgent extends Agent {
 	      if (reply != null) {
 	        if (reply.getPerformative() == ACLMessage.INFORM) {
 	          //purchase succeeded
-	          System.out.println(getAID().getLocalName() + ": " + targetBookTitle + " purchased for " + bestPrice + " from " + reply.getSender().getLocalName());
-		  System.out.println(getAID().getLocalName() + ": waiting for the next purchase order.");
+	          Budget = Budget - bestPrice;
+				System.out.println(getAID().getLocalName() + ": " + targetBookTitle + " purchased for " + bestPrice + " from " + reply.getSender().getLocalName());
+				System.out.println(getAID().getLocalName() + ": Budget is: " + Budget);
+				System.out.println(getAID().getLocalName() + ": waiting for the next purchase order.");
 		  targetBookTitle = "";
 	          //myAgent.doDelete();
 	        }
@@ -165,7 +173,10 @@ public class BookBuyerAgent extends Agent {
 	  	if (step == 2 && bestSeller == null) {
 	  		System.out.println(getAID().getLocalName() + ": " + targetBookTitle + " is not on sale.");
 	  	}
-	    //process terminates here if purchase has failed (title not on sale) or book was successfully bought 
+		  if (step == 2 && Budget < bestPrice) {
+			  System.out.println(getAID().getLocalName() + ": " + targetBookTitle + " is too expensive.");
+		  }
+		  //process terminates here if purchase has failed (title not on sale) or book was successfully bought
 	    return ((step == 2 && bestSeller == null) || step == 4);
 	  }
 	}
