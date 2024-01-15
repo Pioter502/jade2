@@ -81,6 +81,7 @@ public class BookSellerAgent extends Agent {
 	        reply.setContent("not-available");
 	      }
 	      myAgent.send(reply);
+
 	    }
 	    else {
 	      block();

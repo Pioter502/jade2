@@ -10,8 +10,13 @@ import jade.domain.FIPAException;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
 import jade.domain.FIPAAgentManagement.ServiceDescription;
 
+import java.util.concurrent.TimeUnit;
+
 public class BookBuyerAgent extends Agent {
 	private int Budget = 60;
+	private static long max_time = 8000;
+	private long TimeB = 900000000;
+	private long TimeA;
   private BookBuyerGui myGui;
   private String targetBookTitle;
   
@@ -91,42 +96,53 @@ public class BookBuyerAgent extends Agent {
 	
 	  public void action() {
 	    switch (step) {
-	    case 0:
-	      //call for proposal (CFP) to found sellers
-	      ACLMessage cfp = new ACLMessage(ACLMessage.CFP);
-	      for (int i = 0; i < sellerAgents.length; ++i) {
-	        cfp.addReceiver(sellerAgents[i]);
-	      } 
-	      cfp.setContent(targetBookTitle);
-	      cfp.setConversationId("book-trade");
-	      cfp.setReplyWith("cfp"+System.currentTimeMillis()); //unique value
-	      myAgent.send(cfp);
-	      mt = MessageTemplate.and(MessageTemplate.MatchConversationId("book-trade"),
-	                               MessageTemplate.MatchInReplyTo(cfp.getReplyWith()));
-	      step = 1;
-	      break;
-	    case 1:
-	      //collect proposals
-	      ACLMessage reply = myAgent.receive(mt);
-	      if (reply != null) {
-	        if (reply.getPerformative() == ACLMessage.PROPOSE) {
-	          //proposal received
-	          int price = Integer.parseInt(reply.getContent());
-	          if (bestSeller == null || price < bestPrice) {
-	            //the best proposal as for now
-	            bestPrice = price;
-				bestSeller = reply.getSender();
-	          }
-	        }
-	        repliesCnt++;
-	        if (repliesCnt >= sellerAgents.length) {
-	          //all proposals have been received
-	          step = 2; 
-	        }
-	      }
-	      else {
-	        block();
-	      }
+			case 0:
+				//call for proposal (CFP) to found sellers
+				ACLMessage cfp = new ACLMessage(ACLMessage.CFP);
+				for (int i = 0; i < sellerAgents.length; ++i) {
+					cfp.addReceiver(sellerAgents[i]);
+				}
+				cfp.setContent(targetBookTitle);
+				cfp.setConversationId("book-trade");
+				cfp.setReplyWith("cfp" + System.currentTimeMillis()); //unique value
+				myAgent.send(cfp);
+				mt = MessageTemplate.and(MessageTemplate.MatchConversationId("book-trade"),
+						MessageTemplate.MatchInReplyTo(cfp.getReplyWith()));
+				TimeA = System.currentTimeMillis();
+				step = 1;
+				break;
+			case 1:
+				//collect proposals
+				ACLMessage reply = myAgent.receive(mt);
+				if (reply != null) {
+					if (reply.getPerformative() == ACLMessage.PROPOSE) {
+						//proposal received
+						int price = Integer.parseInt(reply.getContent());
+						TimeA = System.currentTimeMillis();
+						if (bestSeller == null || price < bestPrice) {
+							//the best proposal as for now
+							bestPrice = price;
+							bestSeller = reply.getSender();
+
+						}
+					}
+					repliesCnt++;
+					if (repliesCnt >= sellerAgents.length) {
+
+						//all proposals have been received
+						step = 2;
+					}
+				} else {
+
+						block();
+					}
+				if (System.currentTimeMillis() - TimeA > max_time){
+					System.out.println(getAID().getLocalName() + ": No response received from sellers. Cancelling the purchase.");
+					targetBookTitle = "";
+					step = 4;
+				}
+
+
 	      break;
 	    case 2:
 	      //best proposal consumption - purchase
